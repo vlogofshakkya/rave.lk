@@ -1,0 +1,448 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   RAVE.LK — design tokens
+   Palette derived from the wordmark: hard black, bone white,
+   acid lime (festival rig gels) + ultraviolet (blacklight wash).
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --color-void: #050507;
+  --color-void-2: #0b0b10;
+  --color-void-3: #14141c;
+  --color-bone: #f2f0eb;
+  --color-smoke: #8a8694;
+  --color-lime: #c8ff00;
+  --color-lime-dim: #9ecc00;
+  --color-uv: #6b2bff;
+  --color-uv-dim: #4a1cba;
+  --color-hot: #ff2d6f;
+
+  --font-display: var(--font-chakra), "Arial Narrow", sans-serif;
+  --font-body: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+:root {
+  --nav-h: 72px;
+  color-scheme: dark;
+
+  /* Written by the Optimize Engine (src/lib/perf.ts). Every effect stays
+     on at every tier — these only scale its weight. */
+  --fx-blur: 1;
+  --fx-amplitude: 1;
+  --fx-density: 1;
+}
+
+/* Blur is the most expensive paint operation, so it scales with the tier
+   rather than being switched off. */
+.fx-glow {
+  filter: blur(calc(90px * var(--fx-blur)));
+}
+[data-tier="low"] .backdrop-blur-xl {
+  backdrop-filter: blur(6px);
+}
+[data-tier="mid"] .backdrop-blur-xl {
+  backdrop-filter: blur(12px);
+}
+
+* {
+  min-width: 0;
+}
+
+html {
+  background: var(--color-void);
+  -webkit-tap-highlight-color: transparent;
+  /* Must sit on <html> as well as <body>: clipping only the body still lets
+     a wide descendant (marquee tracks) grow the document and show a
+     horizontal scrollbar. */
+  overflow-x: clip;
+}
+
+/* Lenis drives scrolling; native smooth-scroll would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-bone);
+  font-family: var(--font-body);
+  overflow-x: clip;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-void);
+}
+
+/* Focus ring — visible, on-brand, never removed. */
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Typography helpers ─────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.84;
+  letter-spacing: -0.03em;
+  font-size: clamp(2.75rem, 11vw, 11rem);
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.025em;
+  font-size: clamp(2.25rem, 7vw, 6rem);
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-lime);
+}
+
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-smoke);
+}
+
+/* ── Signature: clipped "cut corner" geometry from the logo ─── */
+.cut-corner {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.cut-corner-sm {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+.cut-tr {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+
+/* ── Reveal primitives (driven by GSAP / IntersectionObserver) ── */
+[data-reveal] {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+[data-reveal="up"] {
+  transform: translate3d(0, 40px, 0);
+}
+[data-reveal="fade"] {
+  transform: none;
+}
+[data-reveal="left"] {
+  transform: translate3d(-40px, 0, 0);
+}
+[data-reveal="right"] {
+  transform: translate3d(40px, 0, 0);
+}
+[data-reveal="scale"] {
+  transform: scale(0.92);
+}
+/* Rises and un-skews, like a card being dealt onto the page. */
+[data-reveal="deal"] {
+  transform: translate3d(0, 60px, 0) skewY(3deg) scale(0.97);
+}
+/* Unrolls from the leading edge — used on wide bands and rails. */
+[data-reveal="wipe"] {
+  clip-path: inset(0 100% 0 0);
+  opacity: 1;
+}
+/* Drops in with a slight rotation, for posters and flyers. */
+[data-reveal="flyer"] {
+  transform: translate3d(0, 48px, 0) rotate(-2.5deg) scale(0.96);
+}
+/* Splits open vertically. */
+[data-reveal="curtain"] {
+  clip-path: inset(50% 0 50% 0);
+  opacity: 1;
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform calc(0.95s * (2 - var(--fx-amplitude))) var(--ease-out-expo),
+    clip-path 1.05s var(--ease-in-out-quart);
+}
+
+/* Line-by-line text reveal */
+.line-mask {
+  display: block;
+  overflow: hidden;
+}
+.line-mask > span {
+  display: block;
+  transform: translateY(105%);
+}
+.is-in .line-mask > span,
+.line-mask.is-in > span {
+  transform: translateY(0);
+  transition: transform 1s var(--ease-out-expo);
+}
+
+/* ── Marquee ────────────────────────────────────────────────── */
+@keyframes marquee-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+/* The wrapper must clip its own track, otherwise the duplicated content
+   widens the document and creates a horizontal scrollbar. */
+.marquee {
+  overflow: hidden;
+  max-width: 100%;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x var(--marquee-duration, 30s) linear infinite;
+  /* Skew is applied to the wrapper; keep the track on its own layer. */
+  will-change: transform;
+}
+.marquee-track[data-dir="right"] {
+  animation-direction: reverse;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* ── Ambient motion ─────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(3%, -4%, 0);
+  }
+}
+@keyframes eq-bar {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -5%); }
+  20% { transform: translate(-10%, 5%); }
+  30% { transform: translate(5%, -10%); }
+  40% { transform: translate(-5%, 15%); }
+  50% { transform: translate(-10%, 5%); }
+  60% { transform: translate(15%, 0); }
+  70% { transform: translate(0, 10%); }
+  80% { transform: translate(-15%, 0); }
+  90% { transform: translate(10%, 5%); }
+  100% { transform: translate(5%, 0); }
+}
+
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: -150%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+  animation: grain-shift 0.6s steps(1) infinite;
+  z-index: 3;
+}
+
+@keyframes fade-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.lightbox-img {
+  animation: fade-zoom 0.5s var(--ease-out-expo);
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color 0.4s var(--ease-out-expo);
+  cursor: pointer;
+}
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translateY(101%);
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: translateY(0);
+}
+
+.btn-lime {
+  background: var(--color-lime);
+  color: var(--color-void);
+}
+.btn-lime::before {
+  background: var(--color-bone);
+}
+
+.btn-ghost {
+  border: 1px solid color-mix(in srgb, var(--color-bone) 28%, transparent);
+  color: var(--color-bone);
+}
+.btn-ghost::before {
+  background: var(--color-lime);
+}
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  color: var(--color-void);
+  border-color: var(--color-lime);
+}
+
+/* ── Link underline sweep ───────────────────────────────────── */
+.link-sweep {
+  position: relative;
+  display: inline-block;
+}
+.link-sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.45s var(--ease-out-expo);
+}
+.link-sweep:hover::after,
+.link-sweep:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ── Utility ────────────────────────────────────────────────── */
+.shell {
+  width: 100%;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+.hairline {
+  border-color: color-mix(in srgb, var(--color-bone) 12%, transparent);
+}
+
+.noise-panel {
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--color-uv) 18%, transparent), transparent 60%),
+    var(--color-void-2);
+}
+
+/* Hide scrollbar on horizontal rails but keep it scrollable */
+.no-bar {
+  scrollbar-width: none;
+}
+.no-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .line-mask > span {
+    transform: none !important;
+  }
+  .grain::after {
+    animation: none !important;
+  }
+}
